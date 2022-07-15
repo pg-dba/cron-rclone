@@ -11,10 +11,14 @@ ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
 echo ${TZ} > /etc/timezone
 fi
 
+mkdir -p /root/.config/rclone
+touch /root/.config/rclone/rclone.conf
+truncate -s 0 /root/.config/rclone/rclone.conf
+chmod 600 /root/.config/rclone/rclone.conf
+
 # minio
 if [ ! -z "${MINIO_ENDPOINT_URL}" ]; then
-mkdir -p /root/.config/rclone
-echo "[minio]" > /root/.config/rclone/rclone.conf
+echo -e "\n[minio]" >> /root/.config/rclone/rclone.conf
 echo "type = s3" >> /root/.config/rclone/rclone.conf
 echo "provider = Minio" >> /root/.config/rclone/rclone.conf
 echo "env_auth = false" >> /root/.config/rclone/rclone.conf
@@ -24,11 +28,31 @@ echo "region = us-east-1" >> /root/.config/rclone/rclone.conf
 echo "endpoint = ${MINIO_ENDPOINT_URL}" >> /root/.config/rclone/rclone.conf
 echo "location_constraint =" >> /root/.config/rclone/rclone.conf
 echo "server_side_encryption =" >> /root/.config/rclone/rclone.conf
-chmod 600 /root/.config/rclone/rclone.conf
 # rclone sync /cronwork minio:${MINIO_BACKET}/${HOSTNAME} --progress
 # rclone lsd minio:
 # rclone ls minio:${MINIO_BACKET}
 fi
+
+# sftp
+if [ ! -z "${SFTPSERVER}" ]; then
+echo -e "\n[sftp]" >> /root/.config/rclone/rclone.conf
+echo "type = sftp" >> /root/.config/rclone/rclone.conf
+echo "host = ${SFTPSERVER}" >> /root/.config/rclone/rclone.conf
+echo "user = ${SFTPUSER}" >> /root/.config/rclone/rclone.conf
+echo "pass = $(rclone obscure ${SFTPPASSWORD})" >> /root/.config/rclone/rclone.conf
+fi
+
+# logrotate
+echo "/root/rclone.log" > /etc/logrotate.d/crontask
+echo "{" >> /etc/logrotate.d/crontask
+echo -e "\tdaily" >> /etc/logrotate.d/crontask
+echo -e "\tmissingok" >> /etc/logrotate.d/crontask
+echo -e "\tnocreate" >> /etc/logrotate.d/crontask
+echo -e "\tnotifempty" >> /etc/logrotate.d/crontask
+echo -e "\trotate 7" >> /etc/logrotate.d/crontask
+echo -e "\tnocompress" >> /etc/logrotate.d/crontask
+echo "}" >> /etc/logrotate.d/crontask
+chmod 644 /etc/logrotate.d/crontask
 
 set -e
 
