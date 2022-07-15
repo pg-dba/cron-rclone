@@ -8,6 +8,7 @@ RUN set -ex && \
     apk add --no-cache bash && \
     apk add --no-cache tzdata && \
     apk add --no-cache linux-pam && \
+    apk add --no-cache logrotate && \
     apk add --no-cache nano && \
 # making logging pipe
     mkfifo -m 0666 /var/log/cron.log && \
